@@ -1,0 +1,51 @@
+/* 
+ * Application Theme Colors
+ * Pastel color palette for the entire application
+ */
+
+:root {
+  /* Primary Pastel Colors */
+  --color-mint: #C3DCD8;        /* Soft mint green */
+  --color-rose: #EFD1D4;        /* Soft rose pink */
+  --color-blush: #F8E8ED;       /* Light blush pink */
+  --color-gray: #DBD9DA;        /* Soft gray */
+  --color-sage: #C5BD96;        /* Sage green */
+  --color-teal: #93B0AC;        /* Muted teal */
+  
+  /* Neutral Colors */
+  --color-white: #FFFFFF;
+  --color-off-white: #FAFAFA;
+  
+  /* Text Colors */
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-light: #a0aec0;
+  
+  /* Semantic Colors (using pastel palette) */
+  --color-success: #93B0AC;     /* Teal for success */
+  --color-error: #EFD1D4;       /* Rose for errors (soft) */
+  --color-warning: #C5BD96;     /* Sage for warnings */
+  --color-info: #C3DCD8;        /* Mint for info */
+  
+  /* UI Element Colors */
+  --color-primary: #93B0AC;     /* Main brand color - teal */
+  --color-secondary: #C3DCD8;   /* Secondary brand color - mint */
+  --color-accent: #EFD1D4;      /* Accent color - rose */
+  
+  /* Background Colors */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8E8ED;      /* Blush for secondary backgrounds */
+  --bg-tertiary: #DBD9DA;       /* Gray for tertiary backgrounds */
+  
+  /* Border Colors */
+  --border-light: #DBD9DA;
+  --border-medium: #C3DCD8;
+  --border-dark: #93B0AC;
+  
+  /* Shadow Colors */
+  --shadow-sm: 0 2px 4px rgba(147, 176, 172, 0.1);
+  --shadow-md: 0 4px 12px rgba(147, 176, 172, 0.15);
+  --shadow-lg: 0 8px 24px rgba(147, 176, 172, 0.2);
+  --shadow-xl: 0 12px 40px rgba(147, 176, 172, 0.25);
+}
