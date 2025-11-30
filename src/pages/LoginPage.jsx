@@ -1,13 +1,17 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import "./LoginPage.css";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [userType, setUserType] = useState("student"); // "student" or "professor"
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [faculty, setFaculty] = useState("");
   const [yearOfStudy, setYearOfStudy] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [subjects, setSubjects] = useState([""]);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -135,6 +139,14 @@ export default function LoginPage() {
       if (!faculty) {
         newErrors.faculty = "Faculty is required";
       }
+
+      if (!firstName) {
+        newErrors.firstName = "First name is required";
+      }
+
+      if (!lastName) {
+        newErrors.lastName = "Last name is required";
+      }
       
       if (userType === "student" && !yearOfStudy) {
         newErrors.yearOfStudy = "Year of study is required";
@@ -151,9 +163,11 @@ export default function LoginPage() {
       
       if (Object.keys(newErrors).length === 0) {
         if (userType === "student") {
-          console.log("Student sign up valid!", { email, password, faculty, yearOfStudy });
+          console.log("Student sign up valid!", { email, password, faculty, yearOfStudy, firstName, lastName });
+          navigate('/student');
         } else {
-          console.log("Professor sign up valid!", { email, password, faculty, subjects });
+          console.log("Professor sign up valid!", { email, password, faculty, subjects, firstName, lastName });
+          navigate('/prof');
         }
       }
     } else {
@@ -173,6 +187,7 @@ export default function LoginPage() {
       
       if (Object.keys(newErrors).length === 0) {
         console.log("Sign in valid!", { userType, email, password });
+        navigate(userType === 'student' ? '/student' : '/prof');
       }
     }
   };
@@ -184,6 +199,8 @@ export default function LoginPage() {
     setPassword("");
     setFaculty("");
     setYearOfStudy("");
+    setFirstName("");
+    setLastName("");
     setSubjects([""]);
     setErrors({});
     setTouched({});
@@ -196,6 +213,8 @@ export default function LoginPage() {
     setPassword("");
     setFaculty("");
     setYearOfStudy("");
+    setFirstName("");
+    setLastName("");
     setSubjects([""]);
     setErrors({});
     setTouched({});
@@ -252,7 +271,7 @@ export default function LoginPage() {
                 <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="logo-text">Dissertation Manager</span>
+            <span className="logo-text">Dissertation Application Manager</span>
           </div>
           <div className="nav-right">
             <div className="user-type-toggle">
@@ -348,6 +367,74 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
+              {isSignUp && (
+                <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">First Name</label>
+                      <div className={`input-container ${errors.firstName && touched.firstName ? 'error' : ''} ${firstName && !errors.firstName ? 'success' : ''}`}>
+                        <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g., Alex"
+                          value={firstName}
+                          onChange={(e) => {
+                            setFirstName(e.target.value);
+                            if (touched.firstName) setErrors(prev => ({ ...prev, firstName: e.target.value ? '' : 'First name is required' }));
+                          }}
+                          onBlur={() => {
+                            setTouched(prev => ({ ...prev, firstName: true }));
+                            if (!firstName) setErrors(prev => ({ ...prev, firstName: 'First name is required' }));
+                          }}
+                        />
+                        {firstName && !errors.firstName && (
+                          <svg className="success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      {errors.firstName && touched.firstName && (
+                        <span className="error-text">{errors.firstName}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Last Name</label>
+                      <div className={`input-container ${errors.lastName && touched.lastName ? 'error' : ''} ${lastName && !errors.lastName ? 'success' : ''}`}>
+                        <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g., Student"
+                          value={lastName}
+                          onChange={(e) => {
+                            setLastName(e.target.value);
+                            if (touched.lastName) setErrors(prev => ({ ...prev, lastName: e.target.value ? '' : 'Last name is required' }));
+                          }}
+                          onBlur={() => {
+                            setTouched(prev => ({ ...prev, lastName: true }));
+                            if (!lastName) setErrors(prev => ({ ...prev, lastName: 'Last name is required' }));
+                          }}
+                        />
+                        {lastName && !errors.lastName && (
+                          <svg className="success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      {errors.lastName && touched.lastName && (
+                        <span className="error-text">{errors.lastName}</span>
+                      )}
+                    </div>
+                  </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label">Email Address</label>
                 <div className={`input-container ${errors.email && touched.email ? 'error' : ''} ${email && !errors.email ? 'success' : ''}`}>
