@@ -8,7 +8,7 @@
   box-sizing: border-box;
 }
 
-.student-homepage {
+.prof-homepage {
   min-height: 100vh;
   width: 100%;
   background: linear-gradient(135deg, var(--color-blush) 0%, var(--color-white) 50%, var(--color-gray) 100%);
@@ -19,7 +19,7 @@
 }
 
 /* Top Header */
-.student-header {
+.prof-header {
   width: 100%;
   background: var(--color-white);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -247,295 +247,16 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 40px;
-}
-
-/* Section Styles */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-bottom: 40px;
-  border-bottom: 2px solid var(--border-light);
-  animation: fadeIn 0.8s ease-out;
-  animation-fill-mode: both;
-}
-
-.section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.section:nth-child(1) {
-  animation-delay: 0.2s;
-}
-
-.section:nth-child(2) {
-  animation-delay: 0.4s;
-}
-
-.section:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.section-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.section-icon.mint {
-  background: var(--color-mint);
-}
-
-.section-icon.rose {
-  background: var(--color-rose);
-}
-
-.section-icon.sage {
-  background: var(--color-sage);
-}
-
-.section-icon svg {
-  width: 24px;
-  height: 24px;
-  color: white;
-}
-
-.section-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.section-content {
-  padding-left: 60px;
-}
-
-/* Application Status */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgba(195, 220, 216, 0.3), rgba(195, 220, 216, 0.1));
-  border: 2px solid var(--color-mint);
-  color: var(--color-teal);
-  transition: all 0.3s ease;
-}
-
-.status-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-mint);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.2);
-  }
-}
-
-/* Next Step */
-.step-card {
-  padding: 24px;
-  background: linear-gradient(135deg, rgba(239, 209, 212, 0.2), rgba(239, 209, 212, 0.05));
-  border: 2px solid var(--color-rose);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: all 0.3s ease;
-}
-
-.step-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(239, 209, 212, 0.4);
-}
-
-.step-text {
-  font-size: 16px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.step-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(147, 176, 172, 0.4);
-  align-self: flex-start;
-}
-
-.step-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(147, 176, 172, 0.5);
-}
-
-.step-action svg {
-  width: 18px;
-  height: 18px;
-  transition: transform 0.3s ease;
-}
-
-.step-action:hover svg {
-  transform: translateX(4px);
-}
-
-/* Announcements */
-.announcements-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.announcement-item {
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(197, 189, 150, 0.15), rgba(197, 189, 150, 0.05));
-  border: 2px solid var(--color-sage);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.announcement-item:hover {
-  transform: translateX(8px);
-  box-shadow: 0 4px 16px rgba(197, 189, 150, 0.3);
-}
-
-.announcement-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.announcement-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.announcement-date {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.announcement-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* Guide Content */
-.guide-content {
-  display: flex;
-  flex-direction: column;
   gap: 32px;
 }
 
-.guide-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.guide-section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.guide-section-title::before {
-  content: '';
-  width: 4px;
-  height: 24px;
-  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
-  border-radius: 2px;
-}
-
-.guide-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.8;
-}
-
-.guide-list {
-  padding-left: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.guide-list li {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  padding-left: 8px;
-}
-
-.guide-list li::marker {
-  color: var(--color-teal);
-  font-weight: 600;
-}
-
-/* Page Header (for professors and guide views) */
+/* Page Header */
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-bottom: 24px;
   border-bottom: 2px solid var(--border-light);
-  margin-bottom: 32px;
 }
 
 .page-title-section {
@@ -562,10 +283,6 @@
   background: var(--color-rose);
 }
 
-.page-icon.sage {
-  background: var(--color-sage);
-}
-
 .page-icon svg {
   width: 28px;
   height: 28px;
@@ -584,15 +301,233 @@
   color: var(--text-secondary);
 }
 
-/* Disabled button state */
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.count-badge {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(147, 176, 172, 0.2), rgba(195, 220, 216, 0.1));
+  border: 2px solid var(--color-mint);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-teal);
 }
 
-.action-btn:disabled:hover {
-  transform: none;
-  box-shadow: none;
+/* Student List */
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-card {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(195, 220, 216, 0.1), rgba(195, 220, 216, 0.05));
+  border: 2px solid var(--color-mint);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.student-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.student-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.student-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.student-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(147, 176, 172, 0.3);
+  border-color: var(--color-teal);
+}
+
+.student-avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+.student-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.thesis-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thesis-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+.student-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Action Buttons */
+.student-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-accept {
+  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
+  color: white;
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+.btn-accept:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(147, 176, 172, 0.4);
+}
+
+.btn-decline {
+  background: rgba(239, 209, 212, 0.2);
+  color: var(--color-rose);
+  border: 2px solid var(--color-rose);
+}
+
+.btn-decline:hover {
+  background: var(--color-rose);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 209, 212, 0.4);
+}
+
+.btn-view {
+  background: linear-gradient(135deg, rgba(147, 176, 172, 0.15), rgba(195, 220, 216, 0.1));
+  color: var(--color-teal);
+  border: 2px solid var(--color-mint);
+}
+
+.btn-view:hover {
+  background: var(--color-mint);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  gap: 20px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(147, 176, 172, 0.2), rgba(195, 220, 216, 0.1));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.empty-icon svg {
+  width: 40px;
+  height: 40px;
+  color: var(--color-teal);
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 400px;
+  line-height: 1.6;
 }
 
 /* Responsive Design */
@@ -616,6 +551,16 @@
   .menu-item {
     white-space: nowrap;
   }
+
+  .student-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 @media (max-width: 768px) {
@@ -631,11 +576,23 @@
     padding: 32px 24px;
   }
 
-  .section-content {
-    padding-left: 0;
-  }
-
   .logo-text {
     display: none;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .student-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

@@ -1,0 +1,210 @@
+/* Student/Professor Card Styles */
+.student-card {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(195, 220, 216, 0.1), rgba(195, 220, 216, 0.05));
+  border: 2px solid var(--color-mint);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.student-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.student-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.student-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.student-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(147, 176, 172, 0.3);
+  border-color: var(--color-teal);
+}
+
+.student-avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+.student-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.thesis-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thesis-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+.student-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+.student-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-accept {
+  background: linear-gradient(135deg, var(--color-teal), var(--color-mint));
+  color: white;
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+.btn-accept:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(147, 176, 172, 0.4);
+}
+
+.btn-decline {
+  background: rgba(239, 209, 212, 0.2);
+  color: var(--color-rose);
+  border: 2px solid var(--color-rose);
+}
+
+.btn-decline:hover {
+  background: var(--color-rose);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 209, 212, 0.4);
+}
+
+.btn-view {
+  background: linear-gradient(135deg, rgba(147, 176, 172, 0.15), rgba(195, 220, 216, 0.1));
+  color: var(--color-teal);
+  border: 2px solid var(--color-mint);
+}
+
+.btn-view:hover {
+  background: var(--color-mint);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .student-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
