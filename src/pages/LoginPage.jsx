@@ -298,9 +298,8 @@ export default function LoginPage() {
               </button>
             </div>
             <div className="nav-links">
-              <a href="#" className="nav-link">About</a>
-              <a href="#" className="nav-link">Features</a>
-              <a href="#" className="nav-link">Contact</a>
+              <a href="/about" className="nav-link">About</a>
+              <a href="/faq" className="nav-link">FAQ</a>
             </div>
           </div>
         </div>

@@ -202,7 +202,10 @@
   transition: all 0.3s ease;
   border: 2px solid transparent;
   animation: fadeIn 0.8s ease-out;
-  animation-fill-mode: both;
+
+  animation-fill-mode: forwards;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .info-card:nth-child(1) {
@@ -440,7 +443,7 @@
 
 .form-input {
   width: 100%;
-  padding: 16px 16px 16px 48px;
+  padding: 16px 16px 16px 56px !important;
   font-size: 16px;
   border: 2px solid var(--border-light);
   border-radius: 12px;
@@ -748,7 +751,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .login-content {
     grid-template-columns: 1fr;
     gap: 60px;

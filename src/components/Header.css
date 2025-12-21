@@ -27,6 +27,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .header-logo {
@@ -64,19 +65,35 @@
   gap: 24px;
 }
 
+.user-info-container {
+  position: relative;
+}
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
   background: var(--color-gray);
+  border: 2px solid transparent;
   border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
+  font-family: inherit;
+  outline: none;
+}
+
+.user-info:focus {
+  outline: none;
+}
+
+.user-info:active {
+  transform: translateY(0);
 }
 
 .user-info:hover {
-  background: var(--color-mint);
+  background: rgba(195, 220, 216, 0.3);
+  border-color: var(--color-mint);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
 }
@@ -111,6 +128,90 @@
   color: var(--text-secondary);
 }
 
+/* Dropdown Chevron */
+.dropdown-chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--color-white);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--border-light);
+  overflow: hidden;
+  animation: dropdownSlide 0.3s ease-out;
+  z-index: 1000;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: rgba(147, 176, 172, 0.1);
+}
+
+.dropdown-item svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+.dropdown-item.logout {
+  color: var(--color-rose);
+}
+
+.dropdown-item.logout svg {
+  color: var(--color-rose);
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 209, 212, 0.2);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
 @media (max-width: 768px) {
   .header-content {
     padding: 16px 24px;
@@ -118,5 +219,9 @@
 
   .logo-text {
     display: none;
+  }
+
+  .profile-dropdown {
+    min-width: 180px;
   }
 }

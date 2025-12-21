@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import './StudentHomepage.css';
 
 export default function StudentHomepage() {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+
+  const user = {
+    name: 'Alex Student',
+    role: 'Student',
+    initials: 'AS'
+  };
 
   // Mock data for professors
   const professors = [
@@ -49,7 +58,8 @@ export default function StudentHomepage() {
   ];
 
   const handleApply = (professorId) => {
-    console.log('Apply to professor:', professorId);
+    const professor = professors.find(p => p.id === professorId);
+    navigate('/application', { state: { professor } });
   };
 
   const renderContent = () => {
@@ -264,29 +274,7 @@ export default function StudentHomepage() {
   return (
     <div className="student-homepage">
       {/* Header */}
-      <header className="student-header">
-        <div className="header-content">
-          <div className="header-logo">
-            <div className="logo-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="logo-text">Dissertation Application Manager</span>
-          </div>
-          <div className="header-right">
-            <div className="user-info">
-              <div className="user-avatar">AS</div>
-              <div className="user-details">
-                <div className="user-name">Alex Student</div>
-                <div className="user-role">Student</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header user={user} />
 
       {/* Main Layout */}
       <div className="main-layout">
