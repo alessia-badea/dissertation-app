@@ -120,7 +120,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (isSignUp) {
@@ -134,6 +134,10 @@ export default function LoginPage() {
       
       if (!password) {
         newErrors.password = "Password is required";
+      } else if (password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      } else if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+        newErrors.password = "Password must contain uppercase, lowercase, and number";
       }
       
       if (!faculty) {
@@ -162,12 +166,34 @@ export default function LoginPage() {
       setErrors(newErrors);
       
       if (Object.keys(newErrors).length === 0) {
-        if (userType === "student") {
-          console.log("Student sign up valid!", { email, password, faculty, yearOfStudy, firstName, lastName });
-          navigate('/student');
-        } else {
-          console.log("Professor sign up valid!", { email, password, faculty, subjects, firstName, lastName });
-          navigate('/prof');
+        try {
+          const name = `${firstName} ${lastName}`;
+          const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              email,
+              password,
+              name,
+              role: userType,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // Registration successful, redirect to login or auto-login
+            navigate(userType === 'student' ? '/student' : '/prof');
+          } else {
+            // Show error message
+            setErrors({ ...newErrors, submit: data.message || 'Registration failed' });
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          setErrors({ ...newErrors, submit: 'Network error. Please try again.' });
         }
       }
     } else {
@@ -186,8 +212,39 @@ export default function LoginPage() {
       setErrors(newErrors);
       
       if (Object.keys(newErrors).length === 0) {
-        console.log("Sign in valid!", { userType, email, password });
-        navigate(userType === 'student' ? '/student' : '/prof');
+        try {
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              email,
+              password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // Login successful, redirect based on role
+            const userRole = data.user.role;
+            if (userRole === 'student') {
+              navigate('/student');
+            } else if (userRole === 'professor') {
+              navigate('/prof');
+            } else {
+              navigate('/student'); // default
+            }
+          } else {
+            // Show error message
+            setErrors({ ...newErrors, submit: data.message || 'Login failed' });
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          setErrors({ ...newErrors, submit: 'Network error. Please try again.' });
+        }
       }
     }
   };
@@ -587,6 +644,12 @@ export default function LoginPage() {
                     </div>
                   )}
                 </>
+              )}
+
+              {errors.submit && (
+                <div className="error-message" style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>
+                  {errors.submit}
+                </div>
               )}
 
               {!isSignUp && (
