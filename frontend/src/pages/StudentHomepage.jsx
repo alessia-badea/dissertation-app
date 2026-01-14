@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import './StudentHomepage.css';
 
 export default function StudentHomepage() {
   const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
+  // Format user data for Header component
+  const getInitials = (name) => {
+    if (!name) return 'ST';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const user = {
-    name: 'Alex Student',
+    name: authUser?.name || 'Student',
     role: 'Student',
-    initials: 'AS'
+    initials: getInitials(authUser?.name)
   };
 
   // Mock data for professors

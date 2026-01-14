@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 export default function Header({ user }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const toggleDropdown = (e) => {
     e.preventDefault();
@@ -20,9 +22,10 @@ export default function Header({ user }) {
     console.log('Navigate to profile');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsDropdownOpen(false);
-    // Clear any user data/tokens here if needed
+    // Call the logout function from AuthContext
+    await logout();
     navigate('/login');
   };
 

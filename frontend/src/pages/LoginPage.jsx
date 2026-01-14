@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import "./LoginPage.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login, register, user, isAuthenticated } = useAuth();
   const [userType, setUserType] = useState("student"); // "student" or "professor"
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -120,6 +122,14 @@ export default function LoginPage() {
     }
   };
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirectPath = user.role === 'student' ? '/student' : '/prof';
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -139,10 +149,6 @@ export default function LoginPage() {
       } else if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
         newErrors.password = "Password must contain uppercase, lowercase, and number";
       }
-      
-      if (!faculty) {
-        newErrors.faculty = "Faculty is required";
-      }
 
       if (!firstName) {
         newErrors.firstName = "First name is required";
@@ -152,48 +158,19 @@ export default function LoginPage() {
         newErrors.lastName = "Last name is required";
       }
       
-      if (userType === "student" && !yearOfStudy) {
-        newErrors.yearOfStudy = "Year of study is required";
-      }
-      
-      if (userType === "professor") {
-        const hasEmptySubject = subjects.some(s => !s.trim());
-        if (hasEmptySubject || subjects.length === 0) {
-          newErrors.subjects = "At least one subject is required";
-        }
-      }
-      
       setErrors(newErrors);
       
       if (Object.keys(newErrors).length === 0) {
-        try {
-          const name = `${firstName} ${lastName}`;
-          const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              email,
-              password,
-              name,
-              role: userType,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.success) {
-            // Registration successful, redirect to login or auto-login
-            navigate(userType === 'student' ? '/student' : '/prof');
-          } else {
-            // Show error message
-            setErrors({ ...newErrors, submit: data.message || 'Registration failed' });
-          }
-        } catch (error) {
-          console.error('Registration error:', error);
-          setErrors({ ...newErrors, submit: 'Network error. Please try again.' });
+        const name = `${firstName} ${lastName}`;
+        const result = await register(email, password, name, userType);
+        
+        if (result.success) {
+          // Registration and auto-login successful, navigate based on role
+          const redirectPath = result.user.role === 'student' ? '/student' : '/prof';
+          navigate(redirectPath);
+        } else {
+          // Show error message
+          setErrors({ ...newErrors, submit: result.error || 'Registration failed' });
         }
       }
     } else {
@@ -212,38 +189,15 @@ export default function LoginPage() {
       setErrors(newErrors);
       
       if (Object.keys(newErrors).length === 0) {
-        try {
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              email,
-              password,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.success) {
-            // Login successful, redirect based on role
-            const userRole = data.user.role;
-            if (userRole === 'student') {
-              navigate('/student');
-            } else if (userRole === 'professor') {
-              navigate('/prof');
-            } else {
-              navigate('/student'); // default
-            }
-          } else {
-            // Show error message
-            setErrors({ ...newErrors, submit: data.message || 'Login failed' });
-          }
-        } catch (error) {
-          console.error('Login error:', error);
-          setErrors({ ...newErrors, submit: 'Network error. Please try again.' });
+        const result = await login(email, password);
+        
+        if (result.success) {
+          // Login successful, navigate based on role
+          const redirectPath = result.user.role === 'student' ? '/student' : '/prof';
+          navigate(redirectPath);
+        } else {
+          // Show error message
+          setErrors({ ...newErrors, submit: result.error || 'Login failed' });
         }
       }
     }
@@ -543,109 +497,7 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {isSignUp && (
-                <>
-                  <div className="form-group">
-                    <label className="form-label">Faculty</label>
-                    <div className={`input-container ${errors.faculty && touched.faculty ? 'error' : ''} ${faculty && !errors.faculty ? 'success' : ''}`}>
-                      <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="e.g., Computer Science"
-                        value={faculty}
-                        onChange={handleFacultyChange}
-                        onBlur={handleFacultyBlur}
-                      />
-                      {faculty && !errors.faculty && (
-                        <svg className="success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </div>
-                    {errors.faculty && touched.faculty && (
-                      <span className="error-text">{errors.faculty}</span>
-                    )}
-                  </div>
-
-                  {userType === "student" && (
-                    <div className="form-group">
-                      <label className="form-label">Year of Study</label>
-                      <div className={`input-container ${errors.yearOfStudy && touched.yearOfStudy ? 'error' : ''} ${yearOfStudy && !errors.yearOfStudy ? 'success' : ''}`}>
-                        <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <select
-                          className="form-input form-select"
-                          value={yearOfStudy}
-                          onChange={handleYearChange}
-                          onBlur={handleYearBlur}
-                        >
-                          <option value="">Select year</option>
-                          <option value="year1">Year 1</option>
-                          <option value="year2">Year 2</option>
-                          <option value="year3">Year 3</option>
-                          <option value="supplementary">Supplementary</option>
-                        </select>
-                        {yearOfStudy && !errors.yearOfStudy && (
-                          <svg className="success-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </div>
-                      {errors.yearOfStudy && touched.yearOfStudy && (
-                        <span className="error-text">{errors.yearOfStudy}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {userType === "professor" && (
-                    <div className="form-group">
-                      <label className="form-label">Subjects Taught</label>
-                      {subjects.map((subject, index) => (
-                        <div key={index} className="subject-row">
-                          <input
-                            type="text"
-                            className="form-input subject-input"
-                            placeholder="e.g., Machine Learning"
-                            value={subject}
-                            onChange={(e) => handleSubjectChange(index, e.target.value)}
-                          />
-                          {subjects.length > 1 && (
-                            <button
-                              type="button"
-                              className="remove-subject-btn"
-                              onClick={() => removeSubject(index)}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        className="add-subject-btn"
-                        onClick={addSubject}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        Add Another Subject
-                      </button>
-                      {errors.subjects && (
-                        <span className="error-text">{errors.subjects}</span>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
+              
               {errors.submit && (
                 <div className="error-message" style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>
                   {errors.submit}

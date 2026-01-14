@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import './ProfHomepage.css';
 
 export default function ProfHomepage() {
+  const { user: authUser, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('requests');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -20,10 +22,20 @@ export default function ProfHomepage() {
   ]);
   const [error, setError] = useState('');
 
+  // Format user data for Header component
+  const getInitials = (name) => {
+    if (!name) return 'PR';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const user = {
-    name: 'Pat Professor',
+    name: authUser?.name || 'Professor',
     role: 'Professor',
-    initials: 'PP'
+    initials: getInitials(authUser?.name)
   };
 
   // Mock data for student requests
