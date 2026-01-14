@@ -31,6 +31,15 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    maxStudents: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 5,
+      validate: {
+        min: 1,
+        max: 20,
+      },
+    },
     // createdAt and updatedAt will be auto-created by Sequelize
   },
   {

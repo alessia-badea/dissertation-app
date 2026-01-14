@@ -27,6 +27,192 @@ router.get('/professor-only', requireRole('professor'), (req, res) => {
   res.json({ message: 'Salut, profesor!' });
 });
 
+// Update profile
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const { name, email, maxStudents } = req.body;
+    const userId = req.session.user.id;
+
+    // Find the user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Validate email if it's being changed
+    if (email && email !== user.email) {
+      if (!validateEmail(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+      }
+
+      // Check if email is already taken
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({
+          success: false,
+          message: 'Email already in use'
+        });
+      }
+    }
+
+    // Update user fields
+    if (name !== undefined) user.name = name.trim() || null;
+    if (email !== undefined) user.email = email.trim();
+    
+    // Update maxStudents only for professors
+    if (maxStudents !== undefined && user.role === 'professor') {
+      const maxStudentsNum = parseInt(maxStudents);
+      if (isNaN(maxStudentsNum) || maxStudentsNum < 1 || maxStudentsNum > 20) {
+        return res.status(400).json({
+          success: false,
+          message: 'Maximum students must be between 1 and 20'
+        });
+      }
+      user.maxStudents = maxStudentsNum;
+    }
+
+    await user.save();
+
+    // Update session
+    req.session.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      maxStudents: user.maxStudents
+    };
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        maxStudents: user.maxStudents
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during profile update',
+      error: error.message
+    });
+  }
+});
+
+// Change password
+router.post('/change-password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.session.user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Find the user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Validate new password
+    const passwordErrors = getPasswordErrors(newPassword);
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password does not meet requirements',
+        requirements: {
+          minLength: 8,
+          uppercase: 'At least one uppercase letter',
+          lowercase: 'At least one lowercase letter',
+          number: 'At least one number'
+        },
+        errors: passwordErrors
+      });
+    }
+
+    // Hash and save new password
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    user.passwordHash = passwordHash;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during password change',
+      error: error.message
+    });
+  }
+});
+
+// Delete account
+router.delete('/delete-account', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    // Find the user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete the user
+    await user.destroy();
+
+    // Destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err);
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during account deletion',
+      error: error.message
+    });
+  }
+});
+
 // ============================================
 // VALIDATION HELPERS
 // ============================================

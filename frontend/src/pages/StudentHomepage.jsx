@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useApplications } from '../context/ApplicationContext';
 import Header from '../components/Header';
 import './StudentHomepage.css';
 
 export default function StudentHomepage() {
   const navigate = useNavigate();
   const { user: authUser, logout } = useAuth();
+  const { applications, hasAppliedTo } = useApplications();
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
   // Format user data for Header component
@@ -120,16 +122,28 @@ export default function StudentHomepage() {
                     </div>
                   </div>
                   <div className="student-actions">
-                    <button 
-                      className="action-btn btn-view" 
-                      onClick={() => handleApply(professor.id)}
-                      disabled={professor.availableSlots === 0}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      {professor.availableSlots === 0 ? 'No Slots' : 'Apply'}
-                    </button>
+                    {hasAppliedTo(professor.id) ? (
+                      <button 
+                        className="action-btn btn-applied" 
+                        disabled
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Applied
+                      </button>
+                    ) : (
+                      <button 
+                        className="action-btn btn-view" 
+                        onClick={() => handleApply(professor.id)}
+                        disabled={professor.availableSlots === 0}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {professor.availableSlots === 0 ? 'No Slots' : 'Apply'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -197,6 +211,8 @@ export default function StudentHomepage() {
         );
 
       default: // dashboard
+        const hasApplications = applications.length > 0;
+
         return (
           <>
             {/* Application Status Section */}
@@ -211,10 +227,33 @@ export default function StudentHomepage() {
                 <h2 className="section-title">Application Status</h2>
               </div>
               <div className="section-content">
-                <div className="status-badge">
-                  <span className="status-dot"></span>
-                  <span>No Active Application</span>
-                </div>
+                {hasApplications ? (
+                  <div className="applications-list">
+                    {applications.map((app) => (
+                      <div key={app.id} className="application-item">
+                        <div className="application-info">
+                          <h4 className="application-professor">{app.professorName}</h4>
+                          <p className="application-thesis">{app.thesisTitle}</p>
+                          <span className="application-date">Submitted {app.submittedDate}</span>
+                        </div>
+                        <div className={`status-badge ${app.status}`}>
+                          <span className="status-dot"></span>
+                          <span>
+                            {app.status === 'pending' && 'Pending Approval'}
+                            {app.status === 'approved' && 'Approved - Upload Document'}
+                            {app.status === 'document_pending' && 'Document Under Review'}
+                            {app.status === 'completed' && 'Completed'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="status-badge">
+                    <span className="status-dot"></span>
+                    <span>No Active Application</span>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -233,10 +272,12 @@ export default function StudentHomepage() {
               <div className="section-content">
                 <div className="step-card">
                   <p className="step-text">
-                    Start your dissertation journey by browsing available coordinators and submitting your first application.
+                    {hasApplications 
+                      ? 'Wait for professor approval or browse additional coordinators to submit more applications.'
+                      : 'Start your dissertation journey by browsing available coordinators and submitting your first application.'}
                   </p>
                   <button className="step-action" onClick={() => setActiveMenu('professors')}>
-                    <span>Browse Coordinators</span>
+                    <span>{hasApplications ? 'Browse More Coordinators' : 'Browse Coordinators'}</span>
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>

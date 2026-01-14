@@ -3,6 +3,7 @@ const session = require('express-session');
 const cors = require('cors');
 const store = require('./sessionStore');
 const authRoutes = require('./routes/auth');
+const applicationRoutes = require('./routes/applications');
 require('dotenv').config();
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(session({
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/applications', applicationRoutes);
 
 app.get('/', (req, res) => {
   if (!req.session.views) {

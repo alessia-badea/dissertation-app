@@ -344,6 +344,306 @@
   transform: translateY(-2px);
 }
 
+/* Status Messages */
+.status-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 32px;
+  gap: 20px;
+  border-radius: 16px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.status-message .status-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.status-message .status-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.status-message.pending {
+  background: linear-gradient(135deg, rgba(147, 176, 172, 0.1), rgba(195, 220, 216, 0.1));
+  border: 2px solid var(--color-teal);
+}
+
+.status-message.pending .status-icon {
+  background: var(--color-teal);
+  color: white;
+}
+
+.status-message.rejected {
+  background: linear-gradient(135deg, rgba(239, 209, 212, 0.1), rgba(239, 209, 212, 0.05));
+  border: 2px solid var(--color-rose);
+}
+
+.status-message.rejected .status-icon {
+  background: var(--color-rose);
+  color: white;
+}
+
+.status-message.warning {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+  border: 2px solid #ffc107;
+}
+
+.status-message.warning .status-icon {
+  background: #ffc107;
+  color: white;
+}
+
+.status-message.success {
+  background: linear-gradient(135deg, rgba(195, 220, 216, 0.15), rgba(195, 220, 216, 0.05));
+  border: 2px solid var(--color-mint);
+}
+
+.status-message.success .status-icon {
+  background: var(--color-mint);
+  color: white;
+}
+
+.status-message h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.status-message p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 500px;
+}
+
+.status-note {
+  font-size: 14px !important;
+  color: var(--text-muted) !important;
+  font-style: italic;
+}
+
+.rejection-reason {
+  background: rgba(239, 209, 212, 0.1);
+  border-left: 4px solid var(--color-rose);
+  padding: 16px 20px;
+  border-radius: 8px;
+  text-align: left;
+  width: 100%;
+  max-width: 500px;
+}
+
+.rejection-reason strong {
+  display: block;
+  color: var(--color-rose);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.rejection-reason p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+/* File Upload */
+.approval-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(195, 220, 216, 0.15), rgba(195, 220, 216, 0.05));
+  border: 2px solid var(--color-mint);
+  border-radius: 12px;
+  color: var(--color-mint);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.approval-notice svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.file-upload-area {
+  margin-top: 8px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 32px;
+  border: 3px dashed var(--border-light);
+  border-radius: 16px;
+  background: var(--color-gray);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-upload-label:hover {
+  border-color: var(--color-teal);
+  background: rgba(147, 176, 172, 0.05);
+}
+
+.file-upload-label svg {
+  width: 48px;
+  height: 48px;
+  color: var(--color-teal);
+}
+
+.upload-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.upload-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.info-box {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(147, 176, 172, 0.05);
+  border-left: 4px solid var(--color-teal);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.info-box svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-box strong {
+  color: var(--text-primary);
+}
+
+.uploaded-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-white);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text-primary);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.uploaded-file-info svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+/* Completion Details */
+.completion-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  background: var(--color-white);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item strong {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item span {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.download-section {
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  background: var(--color-gray);
+  border-radius: 12px;
+}
+
+.download-section h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.document-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.document-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-white);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.document-link:hover {
+  border-color: var(--color-teal);
+  background: rgba(147, 176, 172, 0.05);
+  transform: translateX(4px);
+}
+
+.document-link svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .application-container {

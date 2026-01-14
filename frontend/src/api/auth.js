@@ -100,3 +100,52 @@ export async function getCurrentUser() {
     return null;
   }
 }
+
+/**
+ * Update user profile
+ * @param {Object} profileData - Profile data to update (name, email, maxStudents)
+ * @returns {Promise<Object>} Response with updated user data
+ */
+export async function updateProfile(profileData) {
+  const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include', // Important: Include session cookies
+    body: JSON.stringify(profileData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Profile update failed');
+  }
+
+  return data;
+}
+
+/**
+ * Change user password
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise<Object>} Response confirming password change
+ */
+export async function changePassword(currentPassword, newPassword) {
+  const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include', // Important: Include session cookies
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Password change failed');
+  }
+
+  return data;
+}

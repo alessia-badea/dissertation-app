@@ -18,8 +18,7 @@ export default function Header({ user }) {
 
   const handleGoToProfile = () => {
     setIsDropdownOpen(false);
-    // Navigate to profile page (you can customize this route)
-    console.log('Navigate to profile');
+    navigate('/profile');
   };
 
   const handleLogout = async () => {

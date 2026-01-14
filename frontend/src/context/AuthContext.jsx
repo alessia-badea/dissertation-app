@@ -20,8 +20,10 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
     } catch (err) {
       console.error('Auth check failed:', err);
+      // Don't block the app if auth check fails
       setUser(null);
     } finally {
+      // Always set loading to false to prevent grey screen
       setLoading(false);
     }
   };
@@ -64,6 +66,29 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUserProfile = async (profileData) => {
+    try {
+      setError(null);
+      const response = await authAPI.updateProfile(profileData);
+      setUser(response.user);
+      return { success: true, user: response.user };
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const changeUserPassword = async (currentPassword, newPassword) => {
+    try {
+      setError(null);
+      await authAPI.changePassword(currentPassword, newPassword);
+      return { success: true };
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -71,6 +96,8 @@ export function AuthProvider({ children }) {
     login: loginUser,
     register: registerUser,
     logout: logoutUser,
+    updateProfile: updateUserProfile,
+    changePassword: changeUserPassword,
     isAuthenticated: !!user,
   };
 

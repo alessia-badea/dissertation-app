@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import RequestModal from '../components/RequestModal';
+import StudentModal from '../components/StudentModal';
 import './ProfHomepage.css';
 
 export default function ProfHomepage() {
@@ -8,6 +10,77 @@ export default function ProfHomepage() {
   const [activeMenu, setActiveMenu] = useState('requests');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [declineReason, setDeclineReason] = useState('');
+  const [rejectionMessage, setRejectionMessage] = useState('');
+  const [professorDocument, setProfessorDocument] = useState(null);
+  const [studentRequests, setStudentRequests] = useState([
+    {
+      id: 1,
+      name: 'Emma Johnson',
+      initials: 'EJ',
+      thesisTitle: 'Machine Learning Applications in Healthcare Diagnostics',
+      thesisDescription: 'This research aims to develop and evaluate machine learning models for early disease detection in medical imaging. The study will focus on creating algorithms that can analyze X-rays, MRIs, and CT scans to identify patterns indicative of various conditions. The methodology includes data collection from medical databases, preprocessing techniques, and the implementation of convolutional neural networks for image classification.',
+      faculty: 'Computer Science',
+      year: 'Year 3',
+      submittedDate: '2 days ago'
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      initials: 'MC',
+      thesisTitle: 'Blockchain Technology for Supply Chain Management',
+      thesisDescription: 'This dissertation explores the implementation of blockchain technology to enhance transparency and efficiency in supply chain operations. The research will investigate how distributed ledger technology can track products from manufacturing to delivery, reduce fraud, and improve stakeholder trust. The study includes developing a prototype system and conducting case studies with real-world supply chain scenarios.',
+      faculty: 'Computer Science',
+      year: 'Year 3',
+      submittedDate: '5 days ago'
+    },
+    {
+      id: 3,
+      name: 'Sarah Williams',
+      initials: 'SW',
+      thesisTitle: 'Natural Language Processing for Sentiment Analysis',
+      thesisDescription: 'This research focuses on developing advanced NLP techniques for analyzing sentiment in social media data. The project will create models capable of understanding context, sarcasm, and cultural nuances in text. The methodology involves collecting large datasets from Twitter and Reddit, implementing transformer-based models, and evaluating their performance against existing sentiment analysis tools.',
+      faculty: 'Computer Science',
+      year: 'Year 3',
+      submittedDate: '1 week ago'
+    }
+  ]);
+  const [currentStudents, setCurrentStudents] = useState([
+    {
+      id: 4,
+      name: 'David Brown',
+      initials: 'DB',
+      thesisTitle: 'Deep Learning for Image Recognition in Medical Imaging',
+      thesisDescription: 'This research explores deep learning architectures for medical image analysis.',
+      faculty: 'Computer Science',
+      year: 'Year 3',
+      startedDate: '2 months ago',
+      hasUploadedDocument: true,
+      studentDocumentUrl: 'dissertation_david_brown.pdf',
+      studentDocumentDate: '1 week ago',
+      professorDocumentUrl: null,
+      documentStatus: 'pending_review' // pending_review, approved, rejected
+    },
+    {
+      id: 5,
+      name: 'Lisa Anderson',
+      initials: 'LA',
+      thesisTitle: 'Cybersecurity Frameworks for IoT Devices',
+      thesisDescription: 'This study focuses on developing security frameworks for IoT ecosystems.',
+      faculty: 'Computer Science',
+      year: 'Year 3',
+      startedDate: '3 months ago',
+      hasUploadedDocument: false,
+      studentDocumentUrl: null,
+      studentDocumentDate: null,
+      professorDocumentUrl: null,
+      documentStatus: 'waiting_upload' // waiting_upload, pending_review, approved, rejected
+    }
+  ]);
   const [registrationSessions, setRegistrationSessions] = useState([
     {
       id: 1,
@@ -38,69 +111,115 @@ export default function ProfHomepage() {
     initials: getInitials(authUser?.name)
   };
 
-  // Mock data for student requests
-  const studentRequests = [
-    {
-      id: 1,
-      name: 'Emma Johnson',
-      initials: 'EJ',
-      thesisTitle: 'Machine Learning Applications in Healthcare Diagnostics',
-      faculty: 'Computer Science',
-      year: 'Year 3',
-      submittedDate: '2 days ago'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      initials: 'MC',
-      thesisTitle: 'Blockchain Technology for Supply Chain Management',
-      faculty: 'Computer Science',
-      year: 'Year 3',
-      submittedDate: '5 days ago'
-    },
-    {
-      id: 3,
-      name: 'Sarah Williams',
-      initials: 'SW',
-      thesisTitle: 'Natural Language Processing for Sentiment Analysis',
-      faculty: 'Computer Science',
-      year: 'Year 3',
-      submittedDate: '1 week ago'
-    }
-  ];
-
-  // Mock data for current students
-  const currentStudents = [
-    {
-      id: 4,
-      name: 'David Brown',
-      initials: 'DB',
-      thesisTitle: 'Deep Learning for Image Recognition in Medical Imaging',
-      faculty: 'Computer Science',
-      year: 'Year 3',
-      startedDate: '2 months ago'
-    },
-    {
-      id: 5,
-      name: 'Lisa Anderson',
-      initials: 'LA',
-      thesisTitle: 'Cybersecurity Frameworks for IoT Devices',
-      faculty: 'Computer Science',
-      year: 'Year 3',
-      startedDate: '3 months ago'
-    }
-  ];
-
-  const handleAccept = (studentId) => {
-    console.log('Accepted student:', studentId);
+  const openRequestModal = (request) => {
+    setSelectedRequest(request);
+    setShowModal(true);
+    setDeclineReason('');
   };
 
-  const handleDecline = (studentId) => {
-    console.log('Declined student:', studentId);
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedRequest(null);
+    setDeclineReason('');
+  };
+
+  const handleAcceptRequest = () => {
+    if (!selectedRequest) {
+      console.error('No request selected');
+      return;
+    }
+    
+    console.log('Accepted request:', selectedRequest.id);
+    
+    // Remove from requests list
+    setStudentRequests(studentRequests.filter(req => req.id !== selectedRequest.id));
+    
+    // Add to current students with today's date
+    const newStudent = {
+      ...selectedRequest,
+      startedDate: 'Just now'
+    };
+    setCurrentStudents([newStudent, ...currentStudents]);
+    
+    // TODO: Call backend API to accept request
+    closeModal();
+  };
+
+  const handleDeclineRequest = () => {
+    if (!declineReason.trim()) {
+      alert('Please provide a reason for declining');
+      return;
+    }
+    
+    console.log('Declined request:', selectedRequest.id, 'Reason:', declineReason);
+    
+    // Remove from requests list
+    setStudentRequests(studentRequests.filter(req => req.id !== selectedRequest.id));
+    
+    // TODO: Call backend API to decline request with reason
+    closeModal();
   };
 
   const handleView = (studentId) => {
-    console.log('View student details:', studentId);
+    const student = currentStudents.find(s => s.id === studentId);
+    setSelectedStudent(student);
+    setShowStudentModal(true);
+    setRejectionMessage('');
+    setProfessorDocument(null);
+  };
+
+  const closeStudentModal = () => {
+    setShowStudentModal(false);
+    setSelectedStudent(null);
+    setRejectionMessage('');
+    setProfessorDocument(null);
+  };
+
+  const handleApproveDocument = () => {
+    if (!professorDocument) {
+      alert('Please upload your signed document');
+      return;
+    }
+    
+    console.log('Approved document for student:', selectedStudent.id);
+    console.log('Professor document:', professorDocument);
+    
+    // Update student status
+    setCurrentStudents(currentStudents.map(s => 
+      s.id === selectedStudent.id 
+        ? { ...s, documentStatus: 'approved', professorDocumentUrl: professorDocument.name }
+        : s
+    ));
+    
+    // TODO: Call backend API to approve and upload professor document
+    closeStudentModal();
+  };
+
+  const handleRejectDocument = () => {
+    if (!rejectionMessage.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+    
+    console.log('Rejected document for student:', selectedStudent.id);
+    console.log('Rejection reason:', rejectionMessage);
+    
+    // Update student status
+    setCurrentStudents(currentStudents.map(s => 
+      s.id === selectedStudent.id 
+        ? { ...s, documentStatus: 'rejected', hasUploadedDocument: false, studentDocumentUrl: null }
+        : s
+    ));
+    
+    // TODO: Call backend API to reject document with reason
+    closeStudentModal();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfessorDocument(file);
+    }
   };
 
   const handleAddSession = (e) => {
@@ -405,7 +524,13 @@ export default function ProfHomepage() {
                     <div key={student.id} className="student-card">
                       <div className="student-avatar">{student.initials}</div>
                       <div className="student-info">
-                        <div className="student-name">{student.name}</div>
+                        <div 
+                          className="student-name clickable" 
+                          onClick={() => openRequestModal(student)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {student.name}
+                        </div>
                         <div className="thesis-title">
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -436,13 +561,17 @@ export default function ProfHomepage() {
                         </div>
                       </div>
                       <div className="student-actions">
-                        <button className="action-btn btn-accept" onClick={() => handleAccept(student.id)}>
+                        <button className="action-btn btn-accept" onClick={() => {
+                          setSelectedRequest(student);
+                          console.log('Accepted request:', student.id);
+                          // TODO: Call backend API to accept request
+                        }}>
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                           Accept
                         </button>
-                        <button className="action-btn btn-decline" onClick={() => handleDecline(student.id)}>
+                        <button className="action-btn btn-decline" onClick={() => openRequestModal(student)}>
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
@@ -464,70 +593,206 @@ export default function ProfHomepage() {
                 )}
               </div>
             ) : (
-              <div className="student-list">
-                {currentStudents.length > 0 ? (
-                  currentStudents.map((student) => (
-                    <div key={student.id} className="student-card">
-                      <div className="student-avatar">{student.initials}</div>
-                      <div className="student-info">
-                        <div className="student-name">{student.name}</div>
-                        <div className="thesis-title">
-                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          <span>{student.thesisTitle}</span>
+              <>
+                {(() => {
+                  const pendingReview = currentStudents.filter(s => s.documentStatus === 'pending_review');
+                  const others = currentStudents.filter(s => s.documentStatus !== 'pending_review');
+                  
+                  return (
+                    <>
+                      {/* Pending Review Section */}
+                      {pendingReview.length > 0 && (
+                        <div className="student-section">
+                          <div className="section-header">
+                            <h3 className="section-title">
+                              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                                <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              </svg>
+                              Awaiting Your Review
+                            </h3>
+                            <span className="section-count">{pendingReview.length}</span>
+                          </div>
+                          <div className="student-list">
+                            {pendingReview.map((student) => (
+                              <div key={student.id} className="student-card pending-review">
+                                <div className="student-avatar">{student.initials}</div>
+                                <div className="student-info">
+                                  <div className="student-name">{student.name}</div>
+                                  <div className="thesis-title">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    <span>{student.thesisTitle}</span>
+                                  </div>
+                                  <div className="student-meta">
+                                    <div className="meta-item">
+                                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      <span>{student.faculty}</span>
+                                    </div>
+                                    <div className="meta-item">
+                                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      <span>{student.year}</span>
+                                    </div>
+                                    <div className="meta-item status-indicator">
+                                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      <span className="status-text">Document uploaded {student.studentDocumentDate}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="student-actions">
+                                  <button className="action-btn btn-view" onClick={() => handleView(student.id)}>
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    Review Document
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="student-meta">
-                          <div className="meta-item">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            <span>{student.faculty}</span>
+                      )}
+
+                      {/* Other Students Section */}
+                      {others.length > 0 && (
+                        <div className="student-section">
+                          <div className="section-header">
+                            <h3 className="section-title">
+                              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                              Other Students
+                            </h3>
+                            <span className="section-count">{others.length}</span>
                           </div>
-                          <div className="meta-item">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            <span>{student.year}</span>
-                          </div>
-                          <div className="meta-item">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                              <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
-                            <span>Started {student.startedDate}</span>
+                          <div className="student-list">
+                            {others.map((student) => (
+                              <div key={student.id} className="student-card">
+                                <div className="student-avatar">{student.initials}</div>
+                                <div className="student-info">
+                                  <div className="student-name">{student.name}</div>
+                                  <div className="thesis-title">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    <span>{student.thesisTitle}</span>
+                                  </div>
+                                  <div className="student-meta">
+                                    <div className="meta-item">
+                                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      <span>{student.faculty}</span>
+                                    </div>
+                                    <div className="meta-item">
+                                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
+                                      <span>{student.year}</span>
+                                    </div>
+                                    <div className="meta-item status-indicator">
+                                      {student.documentStatus === 'waiting_upload' ? (
+                                        <>
+                                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                                            <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                          </svg>
+                                          <span className="status-text waiting">Waiting for upload</span>
+                                        </>
+                                      ) : student.documentStatus === 'approved' ? (
+                                        <>
+                                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            <path d="M22 4L12 14.01l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                          </svg>
+                                          <span className="status-text approved">Approved</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                                            <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                          </svg>
+                                          <span className="status-text rejected">Rejected - awaiting resubmission</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="student-actions">
+                                  <button className="action-btn btn-view" onClick={() => handleView(student.id)}>
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    View Details
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
-                      <div className="student-actions">
-                        <button className="action-btn btn-view" onClick={() => handleView(student.id)}>
-                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="empty-state">
-                    <div className="empty-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <h3>No Current Students</h3>
-                    <p>You are not currently supervising any dissertation students.</p>
-                  </div>
-                )}
-              </div>
+                      )}
+
+                      {/* Empty State */}
+                      {currentStudents.length === 0 && (
+                        <div className="empty-state">
+                          <div className="empty-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                          <h3>No Current Students</h3>
+                          <p>You are not currently supervising any dissertation students.</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
             )}
           </div>
         </main>
       </div>
+
+      {/* Modals */}
+      {showModal && (
+        <RequestModal
+          selectedRequest={selectedRequest}
+          declineReason={declineReason}
+          setDeclineReason={setDeclineReason}
+          onClose={closeModal}
+          onAccept={handleAcceptRequest}
+          onDecline={handleDeclineRequest}
+        />
+      )}
+
+      {showStudentModal && (
+        <StudentModal
+          selectedStudent={selectedStudent}
+          rejectionMessage={rejectionMessage}
+          setRejectionMessage={setRejectionMessage}
+          professorDocument={professorDocument}
+          onFileChange={handleFileChange}
+          onClose={closeStudentModal}
+          onApprove={handleApproveDocument}
+          onReject={handleRejectDocument}
+        />
+      )}
     </div>
   );
 }

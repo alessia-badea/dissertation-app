@@ -248,33 +248,36 @@
   display: flex;
   flex-direction: column;
   gap: 40px;
+  text-align: left;
 }
 
 /* Section Styles */
-.section {
+.student-homepage .section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
   padding-bottom: 40px;
   border-bottom: 2px solid var(--border-light);
   animation: fadeIn 0.8s ease-out;
   animation-fill-mode: both;
+  text-align: left;
+  direction: ltr;
 }
 
-.section:last-child {
+.student-homepage .section:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
-.section:nth-child(1) {
+.student-homepage .section:nth-child(1) {
   animation-delay: 0.2s;
 }
 
-.section:nth-child(2) {
+.student-homepage .section:nth-child(2) {
   animation-delay: 0.4s;
 }
 
-.section:nth-child(3) {
+.student-homepage .section:nth-child(3) {
   animation-delay: 0.6s;
 }
 
@@ -289,13 +292,17 @@
   }
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.student-homepage .section-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 2px solid var(--border-light) !important;
+  margin-bottom: 20px !important;
 }
 
-.section-icon {
+.student-homepage .section-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -303,34 +310,39 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
-.section-icon.mint {
+.student-homepage .section-icon.mint {
   background: var(--color-mint);
 }
 
-.section-icon.rose {
+.student-homepage .section-icon.rose {
   background: var(--color-rose);
 }
 
-.section-icon.sage {
+.student-homepage .section-icon.sage {
   background: var(--color-sage);
 }
 
-.section-icon svg {
+.student-homepage .section-icon svg {
   width: 24px;
   height: 24px;
   color: white;
 }
 
-.section-title {
+.student-homepage .section-title {
   font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
+  margin: 0;
+  flex-shrink: 0;
 }
 
-.section-content {
-  padding-left: 60px;
+.student-homepage .section-content {
+  padding-left: 0;
+  width: 100%;
+  align-self: stretch;
 }
 
 /* Application Status */
@@ -582,6 +594,78 @@
 .page-subtitle {
   font-size: 14px;
   color: var(--text-secondary);
+}
+
+/* Applications List */
+.applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.application-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--color-white);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.application-item:hover {
+  border-color: var(--color-teal);
+  box-shadow: 0 4px 12px rgba(147, 176, 172, 0.1);
+}
+
+.application-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.application-professor {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.application-thesis {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.application-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-badge.pending {
+  background: rgba(147, 176, 172, 0.1);
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.status-badge.approved {
+  background: rgba(195, 220, 216, 0.15);
+  border-color: var(--color-mint);
+  color: var(--color-mint);
+}
+
+.status-badge.document_pending {
+  background: rgba(147, 176, 172, 0.1);
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.status-badge.completed {
+  background: rgba(195, 220, 216, 0.2);
+  border-color: var(--color-mint);
+  color: var(--color-mint);
 }
 
 /* Disabled button state */

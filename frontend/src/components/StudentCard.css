@@ -169,8 +169,15 @@
   box-shadow: 0 4px 12px rgba(147, 176, 172, 0.3);
 }
 
+.btn-applied {
+  background: rgba(195, 220, 216, 0.2);
+  color: var(--color-mint);
+  border: 2px solid var(--color-mint);
+  cursor: default;
+}
+
 .action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
