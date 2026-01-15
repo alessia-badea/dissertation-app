@@ -23,18 +23,43 @@ const Application = sequelize.define('Application', {
       key: 'id'
     }
   },
+  sessionId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Sessions',
+      key: 'id'
+    }
+  },
+  requestType: {
+    type: DataTypes.ENUM('direct', 'session'),
+    defaultValue: 'direct',
+    allowNull: false
+  },
   thesisTitle: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true
   },
   thesisDescription: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: true
   },
   status: {
     type: DataTypes.ENUM('pending', 'approved', 'rejected', 'document_pending', 'document_rejected', 'completed'),
     defaultValue: 'pending',
     allowNull: false
+  },
+  reason: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  studentFilePath: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  professorFilePath: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   documentUrl: {
     type: DataTypes.STRING,
@@ -62,6 +87,10 @@ Application.associate = (models) => {
   Application.belongsTo(models.User, {
     foreignKey: 'professorId',
     as: 'professor'
+  });
+  Application.belongsTo(models.Session, {
+    foreignKey: 'sessionId',
+    as: 'session'
   });
 };
 

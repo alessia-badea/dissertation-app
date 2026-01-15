@@ -517,12 +517,266 @@ export default {
 
 ---
 
-## Next Steps (Backend Dev 2)
+## Next Steps (Backend Dev 2) - COMPLETED ✅
 
-After completing Backend Dev 1, the following features will be added:
-- More protected routes
-- File upload endpoints
+Backend Dev 2 has been implemented with the following features:
 - Registration session management
-- Request management endpoints
+- Dissertation request management
+- File upload endpoints
+- Business rule enforcement
 
-All authentication middleware (`requireAuth`, `requireRole`) is ready to be used in future routes.
+### Session Management Endpoints
+
+#### 1. Create Session (Professors Only)
+
+**POST** `/api/sessions`
+
+Create a new registration session.
+
+##### Request Body
+```json
+{
+  "title": "Bachelor Thesis Session 2026",
+  "startDate": "2026-02-01T00:00:00.000Z",
+  "endDate": "2026-02-28T23:59:59.000Z",
+  "maxStudents": 10
+}
+```
+
+##### Validation Rules
+- **title**: Required, non-empty string
+- **startDate**: Required, must be in the future
+- **endDate**: Required, must be after startDate
+- **maxStudents**: Optional, 1-50 (default: 5)
+- Professor cannot have overlapping sessions
+
+##### Success Response (201)
+```json
+{
+  "success": true,
+  "message": "Session created successfully",
+  "session": {
+    "id": 1,
+    "professorId": 2,
+    "title": "Bachelor Thesis Session 2026",
+    "startDate": "2026-02-01T00:00:00.000Z",
+    "endDate": "2026-02-28T23:59:59.000Z",
+    "maxStudents": 10,
+    "createdAt": "2026-01-15T10:00:00.000Z",
+    "updatedAt": "2026-01-15T10:00:00.000Z",
+    "professor": {
+      "id": 2,
+      "name": "Dr. Smith",
+      "email": "smith@university.edu"
+    }
+  }
+}
+```
+
+#### 2. Get All Sessions
+
+**GET** `/api/sessions`
+
+Get all active/future sessions for browsing.
+
+##### Success Response (200)
+```json
+{
+  "success": true,
+  "sessions": [
+    {
+      "id": 1,
+      "title": "Bachelor Thesis Session 2026",
+      "startDate": "2026-02-01T00:00:00.000Z",
+      "endDate": "2026-02-28T23:59:59.000Z",
+      "maxStudents": 10,
+      "currentStudents": 3,
+      "availableSpots": 7,
+      "professor": {
+        "id": 2,
+        "name": "Dr. Smith",
+        "email": "smith@university.edu"
+      },
+      "requests": [
+        {
+          "id": 1,
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### 3. Get Professor's Sessions
+
+**GET** `/api/sessions/my`
+
+Get sessions created by the logged-in professor.
+
+##### Success Response (200)
+```json
+{
+  "success": true,
+  "sessions": [
+    {
+      "id": 1,
+      "title": "Bachelor Thesis Session 2026",
+      "startDate": "2026-02-01T00:00:00.000Z",
+      "endDate": "2026-02-28T23:59:59.000Z",
+      "maxStudents": 10,
+      "statistics": {
+        "total": 5,
+        "pending": 2,
+        "approved": 2,
+        "rejected": 1
+      },
+      "requests": [...]
+    }
+  ]
+}
+```
+
+#### 4. Get Session by ID
+
+**GET** `/api/sessions/:id`
+
+Get details of a specific session.
+
+#### 5. Update Session (Professors Only)
+
+**PUT** `/api/sessions/:id`
+
+Update session details (only if no approved requests exist).
+
+#### 6. Delete Session (Professors Only)
+
+**DELETE** `/api/sessions/:id`
+
+Delete session (only if no requests exist).
+
+### Request Management Endpoints
+
+#### 1. Create Request (Students Only)
+
+**POST** `/api/requests`
+
+Submit a dissertation request to a professor for a specific session.
+
+##### Request Body
+```json
+{
+  "sessionId": 1,
+  "professorId": 2
+}
+```
+
+##### Business Rules
+- Student cannot have approved requests
+- Cannot submit to same professor in same session
+- Session must be active
+- Session must have available spots
+
+##### Success Response (201)
+```json
+{
+  "success": true,
+  "message": "Request submitted successfully",
+  "request": {
+    "id": 1,
+    "studentId": 1,
+    "professorId": 2,
+    "sessionId": 1,
+    "status": "pending",
+    "student": { "id": 1, "name": "John Doe", "email": "john@example.com" },
+    "professor": { "id": 2, "name": "Dr. Smith", "email": "smith@university.edu" },
+    "session": { "id": 1, "title": "Bachelor Thesis Session 2026" }
+  }
+}
+```
+
+#### 2. Get My Requests
+
+**GET** `/api/requests`
+
+Get all requests for the logged-in user.
+
+#### 3. Get Request by ID
+
+**GET** `/api/requests/:id`
+
+Get details of a specific request.
+
+#### 4. Update Request Status (Professors Only)
+
+**PUT** `/api/requests/:id/status`
+
+Approve or reject a request.
+
+##### Request Body
+```json
+{
+  "status": "approved",
+  "reason": "Optional reason for rejection"
+}
+```
+
+##### Business Rules
+- Can only change from 'pending' to 'approved' or 'rejected'
+- Professor cannot approve more than session capacity
+- Status transitions are validated
+
+#### 5. Upload Student File (Students Only)
+
+**POST** `/api/requests/:id/upload/student`
+
+Upload signed document (PDF/DOC/DOCX, max 10MB).
+
+#### 6. Upload Professor File (Professors Only)
+
+**POST** `/api/requests/:id/upload/professor`
+
+Upload professor's response file.
+
+#### 7. Download File
+
+**GET** `/api/requests/:id/download/:type`
+
+Download student or professor file (type: 'student' or 'professor').
+
+#### 8. Delete Request (Students Only)
+
+**DELETE** `/api/requests/:id`
+
+Delete pending request.
+
+### Business Rules Implemented
+
+1. **Session Overlap Prevention**: Professors cannot create overlapping sessions
+2. **Single Approved Request**: Students can have only one approved request
+3. **Session Capacity**: Professors cannot approve more requests than session allows
+4. **Valid Status Transitions**: Only pending → approved/rejected allowed
+5. **File Upload Restrictions**: Files only allowed for approved requests
+6. **Role-Based Access**: All endpoints enforce proper authentication and authorization
+
+### Database Schema
+
+#### Sessions Table
+- id (Primary Key)
+- professorId (Foreign Key → Users)
+- title (String)
+- startDate (DateTime)
+- endDate (DateTime)
+- maxStudents (Integer, default: 5)
+
+#### Requests Table
+- id (Primary Key)
+- studentId (Foreign Key → Users)
+- professorId (Foreign Key → Users)
+- sessionId (Foreign Key → Sessions)
+- status (Enum: 'pending', 'approved', 'rejected')
+- reason (Text, nullable)
+- studentFilePath (String, nullable)
+- professorFilePath (String, nullable)
+
+All authentication middleware (`requireAuth`, `requireRole`) is implemented and used throughout the API.

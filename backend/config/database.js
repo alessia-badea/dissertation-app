@@ -8,7 +8,12 @@ const sequelize = new Sequelize({
 
 // Testăm conexiunea
 sequelize.authenticate()
-  .then(() => console.log('DB conectat cu succes'))
+  .then(() => {
+    console.log('DB conectat cu succes');
+    // Enable foreign keys for SQLite
+    return sequelize.query('PRAGMA foreign_keys = ON;');
+  })
+  .then(() => console.log('Foreign keys enabled'))
   .catch(err => console.error('Eroare DB:', err));
 
 module.exports = sequelize;
