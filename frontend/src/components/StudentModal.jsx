@@ -12,6 +12,24 @@ export default function StudentModal({
 }) {
   if (!selectedStudent) return null;
 
+  // Handle both old mock data structure and new request structure
+  const studentName = selectedStudent.student?.name || selectedStudent.name;
+  const studentEmail = selectedStudent.student?.email || selectedStudent.email;
+  const sessionTitle = selectedStudent.session?.title || selectedStudent.thesisTitle;
+  const hasUploadedDocument = !!selectedStudent.studentFilePath;
+  const isCompleted = !!(selectedStudent.studentFilePath && selectedStudent.professorFilePath);
+  const isPendingReview = hasUploadedDocument && !selectedStudent.professorFilePath;
+  
+  // Get initials
+  const getInitials = (name) => {
+    if (!name) return 'ST';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -27,33 +45,26 @@ export default function StudentModal({
         <div className="modal-body">
           {/* Student Info */}
           <div className="modal-student-info">
-            <div className="modal-student-avatar">{selectedStudent.initials}</div>
+            <div className="modal-student-avatar">{getInitials(studentName)}</div>
             <div>
-              <h3>{selectedStudent.name}</h3>
-              <p>{selectedStudent.faculty} • {selectedStudent.year}</p>
+              <h3>{studentName}</h3>
+              <p>{studentEmail}</p>
               <p style={{ fontSize: '13px', color: '#999', marginTop: '4px' }}>
-                Started {selectedStudent.startedDate}
+                Approved {new Date(selectedStudent.updatedAt).toLocaleDateString()}
               </p>
             </div>
           </div>
 
           {/* Thesis Info */}
           <div className="modal-section">
-            <h4>Thesis Title</h4>
-            <p className="thesis-title-text">{selectedStudent.thesisTitle}</p>
+            <h4>Thesis Description</h4>
+            <p className="thesis-description-text">{sessionTitle}</p>
           </div>
-
-          {selectedStudent.thesisDescription && (
-            <div className="modal-section">
-              <h4>Thesis Description</h4>
-              <p className="thesis-description-text">{selectedStudent.thesisDescription}</p>
-            </div>
-          )}
 
           {/* Document Status */}
           <div className="modal-section">
             <h4>Document Status</h4>
-            {selectedStudent.hasUploadedDocument ? (
+            {hasUploadedDocument ? (
               <div className="document-status-card uploaded">
                 <div className="document-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,8 +73,8 @@ export default function StudentModal({
                   </svg>
                 </div>
                 <div className="document-info">
-                  <p className="document-name">{selectedStudent.studentDocumentUrl}</p>
-                  <p className="document-date">Uploaded {selectedStudent.studentDocumentDate}</p>
+                  <p className="document-name">{selectedStudent.studentFilePath.split('/').pop()}</p>
+                  <p className="document-date">Uploaded by student</p>
                 </div>
                 <button className="document-download-btn">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -89,7 +100,7 @@ export default function StudentModal({
           </div>
 
           {/* Professor Actions - Only show if student uploaded document */}
-          {selectedStudent.hasUploadedDocument && selectedStudent.documentStatus === 'pending_review' && (
+          {isPendingReview && (
             <>
               <div className="modal-section">
                 <h4>Upload Your Signed Document</h4>
@@ -123,8 +134,8 @@ export default function StudentModal({
             </>
           )}
 
-          {/* Show if already approved */}
-          {selectedStudent.documentStatus === 'approved' && (
+          {/* Show if already completed */}
+          {isCompleted && (
             <div className="modal-section">
               <div className="success-message">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -132,6 +143,9 @@ export default function StudentModal({
                   <path d="M22 4L12 14.01l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <p>Document approved! Process completed.</p>
+                <p style={{ fontSize: '13px', marginTop: '8px' }}>
+                  Your signed document: {selectedStudent.professorFilePath.split('/').pop()}
+                </p>
               </div>
             </div>
           )}
@@ -141,7 +155,7 @@ export default function StudentModal({
           <button className="modal-btn btn-secondary" onClick={onClose}>
             Close
           </button>
-          {selectedStudent.hasUploadedDocument && selectedStudent.documentStatus === 'pending_review' && (
+          {isPendingReview && (
             <>
               <button className="modal-btn btn-decline" onClick={onReject}>
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

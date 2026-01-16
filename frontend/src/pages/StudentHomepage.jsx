@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useApplications } from '../context/ApplicationContext';
+import { useSession } from '../context/SessionContext';
+import { useRequest } from '../context/RequestContext';
 import Header from '../components/Header';
+import ApplicationModal from '../components/ApplicationModal';
+import StudentUploadModal from '../components/StudentUploadModal';
 import './StudentHomepage.css';
 
 export default function StudentHomepage() {
   const navigate = useNavigate();
   const { user: authUser, logout } = useAuth();
-  const { applications, hasAppliedTo } = useApplications();
+  const { sessions, loading: sessionsLoading } = useSession();
+  const { requests: myRequests, createRequest, uploadStudentFile, loading: requestsLoading } = useRequest();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   // Format user data for Header component
   const getInitials = (name) => {
@@ -77,6 +84,22 @@ export default function StudentHomepage() {
   };
 
   const renderContent = () => {
+    // Check if student has an approved request
+    const hasApprovedRequest = myRequests?.some(r => r.status === 'approved');
+    const approvedRequest = myRequests?.find(r => r.status === 'approved');
+
+    // Filter to show only active sessions (current date is between start and end)
+    const activeSessions = sessions?.filter(session => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(session.startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(session.endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      return today >= start && today <= end;
+    }) || [];
+
     switch (activeMenu) {
       case 'professors':
         return (
@@ -95,58 +118,122 @@ export default function StudentHomepage() {
                   <p className="page-subtitle">Browse and apply to professors for dissertation supervision</p>
                 </div>
               </div>
-              <div className="count-badge">{professors.length} Available</div>
+              <div className="count-badge">{activeSessions.length} Available</div>
             </div>
 
+            {/* Info banner if student has approved request */}
+            {hasApprovedRequest && (
+              <div style={{
+                backgroundColor: '#e8f4f8',
+                border: '1px solid #b3d9e8',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10" stroke="#0891b2" strokeWidth="2"/>
+                  <path d="M12 16v-4M12 8h.01" stroke="#0891b2" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <div>
+                  <strong style={{ color: '#0e7490', display: 'block', marginBottom: '4px' }}>
+                    You already have an approved supervisor
+                  </strong>
+                  <span style={{ color: '#155e75', fontSize: '14px' }}>
+                    You are currently working with {approvedRequest?.professor?.name}. You cannot apply to other professors while you have an active supervision.
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="student-list">
-              {professors.map((professor) => (
-                <div key={professor.id} className="student-card">
-                  <div className="student-avatar">{professor.initials}</div>
-                  <div className="student-info">
-                    <div className="student-name">{professor.name}</div>
-                    <div className="thesis-title">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>{professor.subjects.join(', ')}</span>
-                    </div>
-                    <div className="student-meta">
-                      <div className="meta-item">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <span>{professor.availableSlots} of {professor.totalSlots} slots available</span>
+              {activeSessions.length > 0 ? (
+                activeSessions.map((session) => {
+                  // Check if student already applied to this session
+                  const hasApplied = myRequests?.some(r => r.sessionId === session.id);
+                  const myRequest = myRequests?.find(r => r.sessionId === session.id);
+                  
+                  // Get professor initials
+                  const profName = session.professor?.name || 'Professor';
+                  const profInitials = profName.split(' ').map(n => n[0]).join('').toUpperCase();
+                  
+                  // Calculate available slots (this is approximate - backend should provide this)
+                  const availableSlots = session.maxStudents || 5;
+                  
+                  return (
+                    <div key={session.id} className="student-card">
+                      <div className="student-avatar">{profInitials}</div>
+                      <div className="student-info">
+                        <div className="student-name">{profName}</div>
+                        <div className="thesis-title">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span>{session.title}</span>
+                        </div>
+                        <div className="student-meta">
+                          <div className="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>{new Date(session.startDate).toLocaleDateString()} - {new Date(session.endDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span>{availableSlots} slots available</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="student-actions">
+                        {hasApplied ? (
+                          <button 
+                            className="action-btn btn-applied" 
+                            disabled
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Applied ({myRequest?.status})
+                          </button>
+                        ) : (
+                          <button 
+                            className="action-btn btn-view" 
+                            onClick={() => {
+                              setSelectedSession(session);
+                              setShowApplicationModal(true);
+                            }}
+                            disabled={hasApprovedRequest}
+                            title={hasApprovedRequest ? 'You already have an approved supervisor' : ''}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            {hasApprovedRequest ? 'Cannot Apply' : 'Apply'}
+                          </button>
+                        )}
                       </div>
                     </div>
+                  );
+                })
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                  <div className="student-actions">
-                    {hasAppliedTo(professor.id) ? (
-                      <button 
-                        className="action-btn btn-applied" 
-                        disabled
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        Applied
-                      </button>
-                    ) : (
-                      <button 
-                        className="action-btn btn-view" 
-                        onClick={() => handleApply(professor.id)}
-                        disabled={professor.availableSlots === 0}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {professor.availableSlots === 0 ? 'No Slots' : 'Apply'}
-                      </button>
-                    )}
-                  </div>
+                  <h3>No Active Sessions</h3>
+                  <p>There are currently no active registration sessions. Please check back later.</p>
                 </div>
-              ))}
+              )}
             </div>
           </>
         );
@@ -211,7 +298,8 @@ export default function StudentHomepage() {
         );
 
       default: // dashboard
-        const hasApplications = applications.length > 0;
+        const hasRequests = myRequests && myRequests.length > 0;
+        const hasPendingRequests = myRequests?.some(r => r.status === 'pending');
 
         return (
           <>
@@ -224,25 +312,30 @@ export default function StudentHomepage() {
                     <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <h2 className="section-title">Application Status</h2>
+                <h2 className="section-title">Request Status</h2>
               </div>
               <div className="section-content">
-                {hasApplications ? (
+                {hasRequests ? (
                   <div className="applications-list">
-                    {applications.map((app) => (
-                      <div key={app.id} className="application-item">
+                    {myRequests.map((request) => (
+                      <div key={request.id} className="application-item">
                         <div className="application-info">
-                          <h4 className="application-professor">{app.professorName}</h4>
-                          <p className="application-thesis">{app.thesisTitle}</p>
-                          <span className="application-date">Submitted {app.submittedDate}</span>
+                          <h4 className="application-professor">{request.professor?.name || 'Professor'}</h4>
+                          <p className="application-thesis">{request.session?.title || 'Registration Session'}</p>
+                          <span className="application-date">Submitted {new Date(request.createdAt).toLocaleDateString()}</span>
                         </div>
-                        <div className={`status-badge ${app.status}`}>
+                        <div className={`status-badge ${request.status} ${request.professorFilePath ? 'completed' : ''}`}>
                           <span className="status-dot"></span>
                           <span>
-                            {app.status === 'pending' && 'Pending Approval'}
-                            {app.status === 'approved' && 'Approved - Upload Document'}
-                            {app.status === 'document_pending' && 'Document Under Review'}
-                            {app.status === 'completed' && 'Completed'}
+                            {request.status === 'pending' && 'Pending Approval'}
+                            {request.status === 'approved' && (
+                              request.professorFilePath 
+                                ? 'Completed' 
+                                : request.studentFilePath 
+                                ? 'Document Under Review' 
+                                : 'Approved - Upload Document'
+                            )}
+                            {request.status === 'rejected' && 'Rejected'}
                           </span>
                         </div>
                       </div>
@@ -251,7 +344,7 @@ export default function StudentHomepage() {
                 ) : (
                   <div className="status-badge">
                     <span className="status-dot"></span>
-                    <span>No Active Application</span>
+                    <span>No Active Requests</span>
                   </div>
                 )}
               </div>
@@ -272,16 +365,36 @@ export default function StudentHomepage() {
               <div className="section-content">
                 <div className="step-card">
                   <p className="step-text">
-                    {hasApplications 
-                      ? 'Wait for professor approval or browse additional coordinators to submit more applications.'
-                      : 'Start your dissertation journey by browsing available coordinators and submitting your first application.'}
+                    {hasApprovedRequest && !approvedRequest?.studentFilePath
+                      ? 'Your request has been approved! Upload your dissertation document to continue the process.'
+                      : hasApprovedRequest && approvedRequest?.studentFilePath && !approvedRequest?.professorFilePath
+                      ? 'Your document is under review by your professor. You will be notified once they provide feedback.'
+                      : hasApprovedRequest && approvedRequest?.professorFilePath
+                      ? 'Congratulations! Your dissertation process is complete. Both documents have been signed.'
+                      : hasPendingRequests
+                      ? 'Your request is pending approval. Wait for the professor to respond.'
+                      : 'Start your dissertation journey by browsing available registration sessions and submitting your first request.'}
                   </p>
-                  <button className="step-action" onClick={() => setActiveMenu('professors')}>
-                    <span>{hasApplications ? 'Browse More Coordinators' : 'Browse Coordinators'}</span>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
+                  {!hasApprovedRequest && (
+                    <button className="step-action" onClick={() => setActiveMenu('professors')}>
+                      <span>{hasPendingRequests ? 'Browse More Sessions' : 'Browse Sessions'}</span>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  )}
+                  {hasApprovedRequest && !approvedRequest?.studentFilePath && (
+                    <button 
+                      className="step-action" 
+                      style={{ backgroundColor: '#0891b2' }}
+                      onClick={() => setShowUploadModal(true)}
+                    >
+                      <span>Upload Document</span>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             </section>
@@ -321,6 +434,27 @@ export default function StudentHomepage() {
             </section>
           </>
         );
+    }
+  };
+
+  const handleApplicationSubmit = async (applicationData) => {
+    const result = await createRequest(applicationData);
+    if (result.success) {
+      setShowApplicationModal(false);
+      setSelectedSession(null);
+      alert('Application submitted successfully! The professor will review your request.');
+    } else {
+      alert(result.error || 'Failed to submit application');
+    }
+  };
+
+  const handleDocumentUpload = async (requestId, file) => {
+    const result = await uploadStudentFile(requestId, file);
+    if (result.success) {
+      setShowUploadModal(false);
+      alert('Document uploaded successfully! Your professor will review it.');
+    } else {
+      alert(result.error || 'Failed to upload document');
     }
   };
 
@@ -377,6 +511,32 @@ export default function StudentHomepage() {
           </div>
         </main>
       </div>
+
+      {/* Application Modal */}
+      {showApplicationModal && (
+        <ApplicationModal
+          session={selectedSession}
+          onClose={() => {
+            setShowApplicationModal(false);
+            setSelectedSession(null);
+          }}
+          onSubmit={handleApplicationSubmit}
+        />
+      )}
+
+      {/* Student Upload Modal */}
+      {showUploadModal && (() => {
+        const approvedReq = myRequests?.find(r => r.status === 'approved');
+        console.log('🔍 All requests:', myRequests);
+        console.log('✅ Approved request:', approvedReq);
+        return (
+          <StudentUploadModal
+            request={approvedReq}
+            onClose={() => setShowUploadModal(false)}
+            onUpload={handleDocumentUpload}
+          />
+        );
+      })()}
     </div>
   );
 }

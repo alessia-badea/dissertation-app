@@ -116,6 +116,8 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('🔐 Login attempt:', { email, passwordLength: password?.length });
+
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -125,9 +127,11 @@ exports.login = async (req, res) => {
 
     // Trim email
     const trimmedEmail = email.trim();
+    console.log('📧 Trimmed email:', trimmedEmail);
 
     const user = await User.findOne({ where: { email: trimmedEmail } });
     if (!user) {
+      console.log('❌ User not found for email:', trimmedEmail);
       // Don't reveal if email exists for security
       return res.status(401).json({ 
         success: false,
@@ -135,8 +139,14 @@ exports.login = async (req, res) => {
       });
     }
 
+    console.log('✅ User found:', user.name, 'Role:', user.role);
+    console.log('🔑 Comparing password...');
+    
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+    console.log('🔑 Password match:', isMatch);
+    
     if (!isMatch) {
+      console.log('❌ Password mismatch');
       return res.status(401).json({ 
         success: false,
         message: 'Credențiale invalide' 

@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ApplicationProvider } from './context/ApplicationContext';
+import { SessionProvider } from './context/SessionContext';
+import { RequestProvider } from './context/RequestContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import StudentHomepage from './pages/StudentHomepage';
@@ -15,8 +17,10 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <ApplicationProvider>
-        <Routes>
+      <SessionProvider>
+        <RequestProvider>
+          <ApplicationProvider>
+            <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         
@@ -59,7 +63,9 @@ function App() {
         <Route path="/faq" element={<FAQPage />} />
         <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </ApplicationProvider>
+          </ApplicationProvider>
+        </RequestProvider>
+      </SessionProvider>
     </AuthProvider>
   );
 }

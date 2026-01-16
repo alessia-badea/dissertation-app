@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSession } from '../context/SessionContext';
+import { useRequest } from '../context/RequestContext';
 import Header from '../components/Header';
 import RequestModal from '../components/RequestModal';
 import StudentModal from '../components/StudentModal';
@@ -7,6 +9,8 @@ import './ProfHomepage.css';
 
 export default function ProfHomepage() {
   const { user: authUser, logout } = useAuth();
+  const { mySessions, createSession: createSessionAPI, deleteSession: deleteSessionAPI, loading: sessionsLoading } = useSession();
+  const { requests, updateRequestStatus, loading: requestsLoading } = useRequest();
   const [activeMenu, setActiveMenu] = useState('requests');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -145,27 +149,28 @@ export default function ProfHomepage() {
     closeModal();
   };
 
-  const handleDeclineRequest = () => {
+  const handleDeclineRequest = async () => {
     if (!declineReason.trim()) {
       alert('Please provide a reason for declining');
       return;
     }
     
-    console.log('Declined request:', selectedRequest.id, 'Reason:', declineReason);
+    const result = await updateRequestStatus(selectedRequest.id, 'rejected', declineReason);
+    if (result.success) {
+      console.log('Request declined');
+    }
     
-    // Remove from requests list
-    setStudentRequests(studentRequests.filter(req => req.id !== selectedRequest.id));
-    
-    // TODO: Call backend API to decline request with reason
     closeModal();
   };
 
-  const handleView = (studentId) => {
-    const student = currentStudents.find(s => s.id === studentId);
-    setSelectedStudent(student);
-    setShowStudentModal(true);
-    setRejectionMessage('');
-    setProfessorDocument(null);
+  const handleView = (requestId) => {
+    const request = requests?.find(r => r.id === requestId);
+    if (request) {
+      setSelectedStudent(request);
+      setShowStudentModal(true);
+      setRejectionMessage('');
+      setProfessorDocument(null);
+    }
   };
 
   const closeStudentModal = () => {
@@ -222,7 +227,7 @@ export default function ProfHomepage() {
     }
   };
 
-  const handleAddSession = (e) => {
+  const handleAddSession = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -231,63 +236,32 @@ export default function ProfHomepage() {
       return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const oneYearFromNow = new Date(today);
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-    // Validation
-    if (start < today) {
-      setError('Start date cannot be in the past');
-      return;
-    }
-
-    if (end <= start) {
-      setError('End date must be after start date');
-      return;
-    }
-
-    if (start > oneYearFromNow) {
-      setError('Registration sessions can only be scheduled up to 1 year in advance');
-      return;
-    }
-
-    if (end > oneYearFromNow) {
-      setError('End date cannot be more than 1 year from today');
-      return;
-    }
-
-    // Check for overlapping sessions
-    const hasOverlap = registrationSessions.some(session => {
-      const sessionStart = new Date(session.startDate);
-      const sessionEnd = new Date(session.endDate);
-      return (start <= sessionEnd && end >= sessionStart);
+    // Create session via backend API
+    // Add time to ensure dates are in the future (set to noon to avoid timezone issues)
+    const startDateTime = new Date(startDate + 'T12:00:00');
+    const endDateTime = new Date(endDate + 'T23:59:59');
+    
+    const result = await createSessionAPI({
+      title: `Registration Session ${startDateTime.toLocaleDateString()}`,
+      startDate: startDateTime.toISOString(),
+      endDate: endDateTime.toISOString(),
+      maxStudents: authUser?.maxStudents || 5
     });
 
-    if (hasOverlap) {
-      setError('This session overlaps with an existing registration period');
-      return;
+    if (result.success) {
+      setStartDate('');
+      setEndDate('');
+      setError('');
+    } else {
+      setError(result.error || 'Failed to create session');
     }
-
-    // Add new session
-    const newSession = {
-      id: Date.now(),
-      startDate: startDate,
-      endDate: endDate,
-      status: start <= today && end >= today ? 'active' : 'upcoming'
-    };
-
-    setRegistrationSessions([...registrationSessions, newSession].sort((a, b) => 
-      new Date(a.startDate) - new Date(b.startDate)
-    ));
-    setStartDate('');
-    setEndDate('');
   };
 
-  const handleDeleteSession = (sessionId) => {
-    setRegistrationSessions(registrationSessions.filter(session => session.id !== sessionId));
+  const handleDeleteSession = async (sessionId) => {
+    const result = await deleteSessionAPI(sessionId);
+    if (!result.success) {
+      setError(result.error || 'Failed to delete session');
+    }
   };
 
   const formatDate = (dateString) => {
@@ -408,13 +382,87 @@ export default function ProfHomepage() {
               </div>
               {activeMenu !== 'registration' && (
                 <div className="count-badge">
-                  {activeMenu === 'requests' ? studentRequests.length : currentStudents.length} {activeMenu === 'requests' ? 'Pending' : 'Active'}
+                  {activeMenu === 'requests' 
+                    ? (requests?.filter(r => r.status === 'pending').length || 0)
+                    : (requests?.filter(r => r.status === 'approved').length || 0)} {activeMenu === 'requests' ? 'Pending' : 'Active'}
                 </div>
               )}
             </div>
 
             {/* Content */}
-            {activeMenu === 'registration' ? (
+            {activeMenu === 'requests' ? (
+              <div className="student-list">
+                {requests && requests.filter(r => r.status === 'pending').length > 0 ? (
+                  requests.filter(r => r.status === 'pending').map((request) => (
+                    <div key={request.id} className="student-card">
+                      <div className="student-avatar">
+                        {request.student?.name ? request.student.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ST'}
+                      </div>
+                      <div className="student-info">
+                        <div 
+                          className="student-name clickable" 
+                          onClick={() => openRequestModal(request)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {request.student?.name || 'Unknown Student'}
+                        </div>
+                        <div className="thesis-title">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span>Request for Session: {request.session?.title || 'N/A'}</span>
+                        </div>
+                        <div className="student-meta">
+                          <div className="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span>{request.student?.email || 'N/A'}</span>
+                          </div>
+                          <div className="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="student-actions">
+                        <button className="action-btn btn-accept" onClick={async () => {
+                          const result = await updateRequestStatus(request.id, 'approved');
+                          if (result.success) {
+                            console.log('Request approved');
+                          }
+                        }}>
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Accept
+                        </button>
+                        <button className="action-btn btn-decline" onClick={() => openRequestModal(request)}>
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <h3>No Pending Requests</h3>
+                    <p>You don't have any pending dissertation supervision requests at the moment.</p>
+                  </div>
+                )}
+              </div>
+            ) : activeMenu === 'registration' ? (
               <div className="registration-content">
                 {/* Add New Session Form */}
                 <div className="registration-form-section">
@@ -457,9 +505,9 @@ export default function ProfHomepage() {
                 {/* Existing Sessions List */}
                 <div className="sessions-list-section">
                   <h3 className="section-title">Scheduled Registration Periods</h3>
-                  {registrationSessions.length > 0 ? (
+                  {mySessions && mySessions.length > 0 ? (
                     <div className="sessions-list">
-                      {registrationSessions.map((session) => {
+                      {mySessions.map((session) => {
                         const status = getSessionStatus(session);
                         return (
                           <div key={session.id} className={`session-card ${status}`}>
@@ -595,8 +643,12 @@ export default function ProfHomepage() {
             ) : (
               <>
                 {(() => {
-                  const pendingReview = currentStudents.filter(s => s.documentStatus === 'pending_review');
-                  const others = currentStudents.filter(s => s.documentStatus !== 'pending_review');
+                  // Get approved requests (these are current students)
+                  const approvedRequests = requests?.filter(r => r.status === 'approved') || [];
+                  
+                  // Separate by file upload status
+                  const pendingReview = approvedRequests.filter(r => r.studentFilePath && !r.professorFilePath);
+                  const others = approvedRequests.filter(r => !r.studentFilePath || r.professorFilePath);
                   
                   return (
                     <>
@@ -614,42 +666,45 @@ export default function ProfHomepage() {
                             <span className="section-count">{pendingReview.length}</span>
                           </div>
                           <div className="student-list">
-                            {pendingReview.map((student) => (
-                              <div key={student.id} className="student-card pending-review">
-                                <div className="student-avatar">{student.initials}</div>
+                            {pendingReview.map((request) => (
+                              <div key={request.id} className="student-card pending-review">
+                                <div className="student-avatar">
+                                  {request.student?.name ? request.student.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ST'}
+                                </div>
                                 <div className="student-info">
-                                  <div className="student-name">{student.name}</div>
+                                  <div className="student-name">{request.student?.name || 'Unknown Student'}</div>
                                   <div className="thesis-title">
                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                     </svg>
-                                    <span>{student.thesisTitle}</span>
+                                    <span>Session: {request.session?.title || 'N/A'}</span>
                                   </div>
                                   <div className="student-meta">
                                     <div className="meta-item">
                                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       </svg>
-                                      <span>{student.faculty}</span>
+                                      <span>{request.student?.email || 'N/A'}</span>
                                     </div>
                                     <div className="meta-item">
                                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                                        <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                       </svg>
-                                      <span>{student.year}</span>
+                                      <span>Approved {new Date(request.updatedAt).toLocaleDateString()}</span>
                                     </div>
                                     <div className="meta-item status-indicator">
                                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                         <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       </svg>
-                                      <span className="status-text">Document uploaded {student.studentDocumentDate}</span>
+                                      <span className="status-text">Document uploaded - awaiting review</span>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="student-actions">
-                                  <button className="action-btn btn-view" onClick={() => handleView(student.id)}>
+                                  <button className="action-btn btn-view" onClick={() => handleView(request.id)}>
                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -678,47 +733,50 @@ export default function ProfHomepage() {
                             <span className="section-count">{others.length}</span>
                           </div>
                           <div className="student-list">
-                            {others.map((student) => (
-                              <div key={student.id} className="student-card">
-                                <div className="student-avatar">{student.initials}</div>
+                            {others.map((request) => (
+                              <div key={request.id} className="student-card">
+                                <div className="student-avatar">
+                                  {request.student?.name ? request.student.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ST'}
+                                </div>
                                 <div className="student-info">
-                                  <div className="student-name">{student.name}</div>
+                                  <div className="student-name">{request.student?.name || 'Unknown Student'}</div>
                                   <div className="thesis-title">
                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                     </svg>
-                                    <span>{student.thesisTitle}</span>
+                                    <span>Session: {request.session?.title || 'N/A'}</span>
                                   </div>
                                   <div className="student-meta">
                                     <div className="meta-item">
                                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       </svg>
-                                      <span>{student.faculty}</span>
+                                      <span>{request.student?.email || 'N/A'}</span>
                                     </div>
                                     <div className="meta-item">
                                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                                        <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                       </svg>
-                                      <span>{student.year}</span>
+                                      <span>Approved {new Date(request.updatedAt).toLocaleDateString()}</span>
                                     </div>
                                     <div className="meta-item status-indicator">
-                                      {student.documentStatus === 'waiting_upload' ? (
+                                      {!request.studentFilePath ? (
                                         <>
                                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                                             <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                           </svg>
-                                          <span className="status-text waiting">Waiting for upload</span>
+                                          <span className="status-text waiting">Waiting for student upload</span>
                                         </>
-                                      ) : student.documentStatus === 'approved' ? (
+                                      ) : request.professorFilePath ? (
                                         <>
                                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                             <path d="M22 4L12 14.01l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                           </svg>
-                                          <span className="status-text approved">Approved</span>
+                                          <span className="status-text approved">Completed</span>
                                         </>
                                       ) : (
                                         <>
@@ -726,14 +784,14 @@ export default function ProfHomepage() {
                                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                                             <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                           </svg>
-                                          <span className="status-text rejected">Rejected - awaiting resubmission</span>
+                                          <span className="status-text rejected">In progress</span>
                                         </>
                                       )}
                                     </div>
                                   </div>
                                 </div>
                                 <div className="student-actions">
-                                  <button className="action-btn btn-view" onClick={() => handleView(student.id)}>
+                                  <button className="action-btn btn-view" onClick={() => handleView(request.id)}>
                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -748,7 +806,7 @@ export default function ProfHomepage() {
                       )}
 
                       {/* Empty State */}
-                      {currentStudents.length === 0 && (
+                      {approvedRequests.length === 0 && (
                         <div className="empty-state">
                           <div className="empty-icon">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

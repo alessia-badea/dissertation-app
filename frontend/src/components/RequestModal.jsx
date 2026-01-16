@@ -10,6 +10,16 @@ export default function RequestModal({
 }) {
   if (!selectedRequest) return null;
 
+  // Get student name and create initials
+  const studentName = selectedRequest.student?.name || 'Student';
+  const getInitials = (name) => {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -24,21 +34,21 @@ export default function RequestModal({
 
         <div className="modal-body">
           <div className="modal-student-info">
-            <div className="modal-student-avatar">{selectedRequest.initials}</div>
+            <div className="modal-student-avatar">{getInitials(studentName)}</div>
             <div>
-              <h3>{selectedRequest.name}</h3>
-              <p>{selectedRequest.faculty} • {selectedRequest.year}</p>
+              <h3>{studentName}</h3>
+              <p>{selectedRequest.student?.email || ''}</p>
             </div>
           </div>
 
           <div className="modal-section">
             <h4>Thesis Title</h4>
-            <p className="thesis-title-text">{selectedRequest.thesisTitle}</p>
+            <p className="thesis-title-text">{selectedRequest.thesisTitle || 'No title provided'}</p>
           </div>
 
           <div className="modal-section">
             <h4>Thesis Description</h4>
-            <p className="thesis-description-text">{selectedRequest.thesisDescription}</p>
+            <p className="thesis-description-text">{selectedRequest.thesisDescription || 'No description provided'}</p>
           </div>
 
           <div className="modal-section">

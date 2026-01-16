@@ -1,9 +1,11 @@
 const { Sequelize } = require('sequelize');
+const path = require('path');
 
 // Exemplu cu SQLite
+// Use path relative to backend folder, going up to root
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: './session-db.sqlite'
+  storage: path.join(__dirname, '..', '..', 'session-db.sqlite')
 });
 
 // Testăm conexiunea

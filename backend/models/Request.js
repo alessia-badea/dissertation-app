@@ -35,6 +35,14 @@ const Request = sequelize.define('Request', {
   professorFilePath: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  thesisTitle: {
+    type: DataTypes.STRING(200),
+    allowNull: true
+  },
+  thesisDescription: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   tableName: 'Requests',

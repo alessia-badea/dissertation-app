@@ -6,7 +6,7 @@ const fs = require('fs').promises;
 // Create a new request (students only)
 exports.createRequest = async (req, res) => {
   try {
-    const { sessionId, professorId } = req.body;
+    const { sessionId, professorId, thesisTitle, thesisDescription } = req.body;
     const studentId = req.session.user.id;
 
     // Validate required fields
@@ -14,6 +14,14 @@ exports.createRequest = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Session ID and Professor ID are required'
+      });
+    }
+
+    // Validate thesis fields
+    if (!thesisTitle || !thesisDescription) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thesis title and description are required'
       });
     }
 
@@ -98,7 +106,9 @@ exports.createRequest = async (req, res) => {
       studentId,
       professorId,
       sessionId,
-      status: 'pending'
+      status: 'pending',
+      thesisTitle: thesisTitle.trim(),
+      thesisDescription: thesisDescription.trim()
     });
 
     // Fetch request with details

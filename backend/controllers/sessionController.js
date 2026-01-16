@@ -1,4 +1,4 @@
-const { Session, User, Application } = require('../models');
+const { Session, User, Application, Request } = require('../models');
 const { Op } = require('sequelize');
 
 // Create a new session (professors only)
@@ -169,7 +169,7 @@ exports.getMySessions = async (req, res) => {
           ]
         }
       ],
-      order: [['startDate', 'DESC']]
+      order: [['startDate', 'ASC']]
     });
 
     // Add statistics for each session
